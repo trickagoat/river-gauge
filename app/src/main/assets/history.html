@@ -92,6 +92,8 @@
 </footer>
 
 <script>
+window.onerror = function(msg,src,line) { document.getElementById('wrap').innerHTML = '<div class="err">JS ERROR line '+line+': '+msg+'</div>'; };
+  
 const ACTION_STAGE = 6.0;
 
 const PROXIES = [
