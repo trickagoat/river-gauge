@@ -126,14 +126,15 @@
 
 <footer>
   <a href="https://waterdata.usgs.gov/monitoring-location/04097500/" target="_blank">USGS 04097500</a> &middot;
-  <a href="https://water.noaa.gov/gauges/trvm4" target="_blank">NOAA TRVM4</a><br>
+  <a href="https://water.noaa.gov/gauges/trvm4" target="_blank">NOAA TRVM4</a> &middot;
+  <a href="history.html">📅 History</a><br>
   St. Joseph River at Three Rivers, MI/IN<br>
   <span id="ts"></span>
 </footer>
 
 <script>
 // Correct NWS flood stages for TRVM4
-const S = { action:7.0, minor:8.0, moderate:9.0, major:10.6 };
+const S = { action:6.0, minor:7.0, moderate:9.0, major:11.0 };
 
 const PROXIES = [
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
