@@ -102,7 +102,10 @@ const PROXIES = [
 
 async function tryFetch(url) {
   try {
-    const r = await fetch(url, {cache:'no-store'});
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 8000);
+    const r = await fetch(url, {cache:'no-store', signal: controller.signal});
+    clearTimeout(tid);
     if (!r.ok) throw new Error(r.status);
     return r.json();
   } catch(e) { return null; }
@@ -138,45 +141,28 @@ function monthLabel(ym) {
 async function load() {
   const now = new Date();
   const end = now.toISOString().slice(0,10);
-
   const startDate = new Date(now);
   startDate.setMonth(startDate.getMonth() - 60);
   const start = startDate.toISOString().slice(0,10);
 
-  // Split into two non-overlapping chunks
-  const midDate = new Date(now);
-  midDate.setMonth(midDate.getMonth() - 30);
-  const mid = midDate.toISOString().slice(0,10);
+  const json = await fetchUSGS(start, end);
 
-  // mid+1 day for second chunk start
-  const mid2Date = new Date(midDate);
-  mid2Date.setDate(mid2Date.getDate() + 1);
-  const mid2 = mid2Date.toISOString().slice(0,10);
-
-  const [j1, j2] = await Promise.all([
-    fetchUSGS(start, mid),
-    fetchUSGS(mid2, end),
-  ]);
-
-  if (!j1 && !j2) {
+  if (!json) {
     document.getElementById('wrap').innerHTML =
-      `<div class="err">Could not load USGS data. Check your connection.</div>`;
+      `<div class="err">Could not load USGS data.<br>Check your connection and try again.</div>`;
     return;
   }
 
-  const records = [
-    ...(j1 ? parseDaily(j1) : []),
-    ...(j2 ? parseDaily(j2) : []),
-  ];
+  const records = parseDaily(json);
 
-  const seen = new Set();
-  const deduped = records.filter(r => {
-    if (seen.has(r.date)) return false;
-    seen.add(r.date); return true;
-  });
+  if (records.length === 0) {
+    document.getElementById('wrap').innerHTML =
+      `<div class="err">Data loaded but no records found.<br>USGS may be temporarily unavailable.</div>`;
+    return;
+  }
 
   const monthMap = {};
-  for (const r of deduped) {
+  for (const r of records) {
     const ym = toYM(r.date);
     if (!monthMap[ym]) monthMap[ym] = { total: 0, action: 0 };
     monthMap[ym].total++;
