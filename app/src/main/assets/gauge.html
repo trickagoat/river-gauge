@@ -3,49 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a1628">
+<meta name="theme-color" content="#f0f4f8">
 <title>St. Joseph River · Three Rivers</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#0a1628; --surface:#0f2040; --card:#132848;
-    --border:rgba(100,160,255,0.15); --accent:#4da6ff;
-    --accent2:#7ecfff; --warn:#f5a623; --ok:#2ecc71;
-    --minor:#f39c12; --moderate:#e67e22; --major:#e74c3c;
-    --text:#e8f1ff; --muted:#6a8aaa;
+    --bg:#f0f4f8; --surface:#e2e8f0; --card:#ffffff;
+    --border:rgba(30,80,160,0.13); --accent:#1a56c4;
+    --accent2:#2563eb; --warn:#d97706; --ok:#16a34a;
+    --minor:#d97706; --moderate:#ea580c; --major:#dc2626;
+    --text:#1e293b; --muted:#64748b;
     --mono:'DM Mono',monospace; --serif:'Playfair Display',serif; --sans:'DM Sans',sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
-  body::before{content:'';position:fixed;inset:0;background:
-    radial-gradient(ellipse at 20% 80%,rgba(30,80,160,.3) 0%,transparent 60%),
-    radial-gradient(ellipse at 80% 20%,rgba(10,40,100,.4) 0%,transparent 50%);z-index:-1}
 
   header{padding:16px 16px 12px;border-bottom:1px solid var(--border);
-    background:rgba(10,22,40,.92);backdrop-filter:blur(12px);
+    background:rgba(240,244,248,.95);backdrop-filter:blur(12px);
     position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center}
   .hl .lbl{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase}
-  .hl h1{font-family:var(--serif);font-size:20px;line-height:1.2}
+  .hl h1{font-family:var(--serif);font-size:20px;line-height:1.2;color:var(--text)}
   .hl .sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:1px}
-  .rbtn{background:var(--surface);border:1px solid var(--border);color:var(--accent);
+  .rbtn{background:var(--accent);border:none;color:#fff;
     border-radius:8px;padding:8px 13px;font-family:var(--mono);font-size:11px;
     cursor:pointer;letter-spacing:1px;flex-shrink:0;transition:all .2s;white-space:nowrap}
-  .rbtn:active{background:var(--accent);color:var(--bg)}
+  .rbtn:active{opacity:.75}
   .rbtn.busy{opacity:.45;pointer-events:none}
 
   .wrap{padding:13px}
   .card{background:var(--card);border:1px solid var(--border);border-radius:14px;
-    padding:17px;margin-bottom:11px;animation:fu .4s ease both}
+    padding:17px;margin-bottom:11px;animation:fu .4s ease both;
+    box-shadow:0 1px 4px rgba(30,80,160,.07)}
   .ct{font-family:var(--mono);font-size:9px;letter-spacing:2.5px;color:var(--muted);
     text-transform:uppercase;margin-bottom:11px}
 
   .srow{display:flex;align-items:center;gap:12px}
-  .dot{width:13px;height:13px;border-radius:50%;flex-shrink:0;box-shadow:0 0 10px currentColor}
+  .dot{width:13px;height:13px;border-radius:50%;flex-shrink:0;box-shadow:0 0 8px currentColor}
   .dot.pulse{animation:pulse 1.6s ease-in-out infinite}
   @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
-  .slabel{font-size:17px;font-weight:500}
+  .slabel{font-size:17px;font-weight:500;color:var(--text)}
   .ssub{font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono)}
 
   .rc{text-align:center;padding:4px 0}
@@ -58,14 +54,14 @@
   .barw{height:23px;background:var(--surface);border-radius:6px;overflow:hidden;
     border:1px solid var(--border);margin-bottom:13px}
   .barf{height:100%;border-radius:6px;
-    background:linear-gradient(90deg,#1a4d9e,var(--accent));
+    background:linear-gradient(90deg,#3b82f6,var(--accent));
     transition:width 1.2s cubic-bezier(.4,0,.2,1);position:relative}
   .barf::after{content:'';position:absolute;right:0;top:0;bottom:0;
-    width:3px;background:#fff;box-shadow:0 0 8px #fff}
+    width:3px;background:var(--accent);box-shadow:0 0 8px var(--accent)}
 
   .sr{display:flex;align-items:center;justify-content:space-between;
     padding:7px 9px;border-radius:7px;margin-bottom:4px}
-  .sr.on{background:rgba(77,166,255,.1)}
+  .sr.on{background:rgba(30,86,196,.08)}
   .sl{display:flex;align-items:center;gap:8px}
   .sd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
   .sn{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted)}
@@ -73,10 +69,11 @@
 
   .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px}
   .ic{background:var(--card);border:1px solid var(--border);border-radius:12px;
-    padding:13px 9px;text-align:center;animation:fu .5s ease both}
+    padding:13px 9px;text-align:center;animation:fu .5s ease both;
+    box-shadow:0 1px 4px rgba(30,80,160,.07)}
   .icl{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);
     text-transform:uppercase;margin-bottom:5px}
-  .icv{font-family:var(--mono);font-size:19px;font-weight:500}
+  .icv{font-family:var(--mono);font-size:19px;font-weight:500;color:var(--text)}
   .icu{font-size:10px;color:var(--muted);margin-top:2px}
 
   canvas{width:100%!important;display:block;border-radius:4px;margin-top:10px}
@@ -99,11 +96,10 @@
   .wv span:nth-child(4){animation-delay:.36s}.wv span:nth-child(5){animation-delay:.48s}
   @keyframes wvk{0%,100%{transform:scaleY(.35);opacity:.35}50%{transform:scaleY(1.2);opacity:1}}
 
-  .err{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:12px;
-    padding:18px;color:#e74c3c;font-family:var(--mono);font-size:12px;text-align:center;
+  .err{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:12px;
+    padding:18px;color:#dc2626;font-family:var(--mono);font-size:12px;text-align:center;
     line-height:1.9;margin:8px 0}
-  .err a{color:#ff8a7a}
-  .note{background:rgba(77,166,255,.06);border:1px solid rgba(77,166,255,.15);
+  .note{background:rgba(30,86,196,.06);border:1px solid rgba(30,86,196,.15);
     border-radius:10px;padding:11px 13px;font-family:var(--mono);font-size:10px;
     color:var(--muted);line-height:1.8;margin-bottom:11px;text-align:center}
 
@@ -136,15 +132,19 @@
 </footer>
 
 <script>
-const S = { action:7.0, minor:9.0, moderate:11.0, major:13.0 };
+// Correct NWS flood stages for TRVM4
+const S = { action:7.0, minor:8.0, moderate:9.0, major:10.6 };
+
 const PROXIES = [
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
   url => `https://cors-anywhere.herokuapp.com/${url}`,
 ];
+
 const USGS_URL = 'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=04097500&parameterCd=00065,00060&period=P7D';
-const NOAA_XML = 'https://water.weather.gov/ahps2/hydrograph_to_xml.php?gage=trvm4&output=xml';
-const NOAA_IMG = 'https://water.weather.gov/resources/hydrographs/trvm4_hg.png';
+const NOAA_API = 'https://api.water.noaa.gov/nwps/v1/gauges/trvm4/stageflow';
+const NOAA_IMG = 'https://water.noaa.gov/images/hydrographs/trvm4_hg.png';
+
 async function tryFetch(url, isJson) {
   try {
     const r = await fetch(url, {cache:'no-store'});
@@ -169,12 +169,12 @@ function fmt(t) {
 }
 
 function statusFor(stage, stages) {
-  if (stage === null) return {label:'Unknown',color:'#6a8aaa',pulse:false};
-  if (stage >= stages.major)    return {label:'Major Flood',color:'#e74c3c',pulse:true};
-  if (stage >= stages.moderate) return {label:'Moderate Flood',color:'#e67e22',pulse:true};
-  if (stage >= stages.minor)    return {label:'Minor Flood',color:'#f39c12',pulse:true};
-  if (stage >= stages.action)   return {label:'Action Stage',color:'#f5a623',pulse:true};
-  return {label:'Normal',color:'#2ecc71',pulse:false};
+  if (stage === null) return {label:'Unknown',color:'#94a3b8',pulse:false};
+  if (stage >= stages.major)    return {label:'Major Flood',color:'#dc2626',pulse:true};
+  if (stage >= stages.moderate) return {label:'Moderate Flood',color:'#ea580c',pulse:true};
+  if (stage >= stages.minor)    return {label:'Minor Flood',color:'#d97706',pulse:true};
+  if (stage >= stages.action)   return {label:'Action Stage',color:'#ca8a04',pulse:true};
+  return {label:'Normal',color:'#16a34a',pulse:false};
 }
 
 function parseUSGS(json) {
@@ -196,30 +196,28 @@ function parseUSGS(json) {
   return {stage, flow, obsT, SS};
 }
 
-function parseNOAA(xml) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xml, 'text/xml');
+function parseNOAA(json) {
   const stages = {...S};
-  const getStage = (id) => {
-    const el = doc.querySelector(`sigstage[id="${id}"]`);
-    return el ? parseFloat(el.getAttribute('value')) : null;
-  };
-  stages.action   = getStage('action')   ?? S.action;
-  stages.minor    = getStage('flood')    ?? S.minor;
-  stages.moderate = getStage('moderate') ?? S.moderate;
-  stages.major    = getStage('major')    ?? S.major;
+  // Try to read stages from API
+  const observed = json?.observed?.data || [];
+  const forecast = json?.forecast?.data || [];
 
-  const forecasts = [];
-  doc.querySelectorAll('forecast datum').forEach(d => {
-    const t = d.querySelector('valid')?.textContent;
-    const v = d.querySelector('primary')?.textContent;
-    if (t && v) forecasts.push({t, v: parseFloat(v)});
-  });
+  // Override stages if provided
+  if (json?.flood?.action)   stages.action   = parseFloat(json.flood.action);
+  if (json?.flood?.minor)    stages.minor    = parseFloat(json.flood.minor);
+  if (json?.flood?.moderate) stages.moderate = parseFloat(json.flood.moderate);
+  if (json?.flood?.major)    stages.major    = parseFloat(json.flood.major);
+
+  const forecasts = forecast.map(d => ({
+    t: d.time || d.validTime,
+    v: parseFloat(d.primary ?? d.stage ?? d.value)
+  })).filter(d => !isNaN(d.v));
+
   return {stages, forecasts};
 }
 
 function renderForecastHtml(forecasts) {
-  const rows = forecasts.slice(0,8).map(f=>`
+  const rows = forecasts.slice(0,10).map(f=>`
     <div class="fr">
       <span class="ft">${fmt(f.t)}</span>
       <span class="fv">${f.v.toFixed(2)} ft</span>
@@ -231,24 +229,24 @@ async function loadAll() {
   const btn = document.getElementById('rbtn');
   if (btn) btn.classList.add('busy');
 
-  const [usgsJson, noaaXml] = await Promise.all([
+  const [usgsJson, noaaJson] = await Promise.all([
     fetchWithProxies(USGS_URL, true),
-    fetchWithProxies(NOAA_XML, false),
+    fetchWithProxies(NOAA_API, true),
   ]);
 
   document.getElementById('ts').textContent = 'Updated ' + fmt(new Date().toISOString());
 
   if (!usgsJson) {
     document.getElementById('wrap').innerHTML =
-      `<div class="err">Could not load USGS data.<br>Check your connection and try refreshing.<br><a href="https://waterdata.usgs.gov/monitoring-location/04097500/" target="_blank">Open USGS site</a></div>`;
+      `<div class="err">Could not load USGS data.<br>Check your connection and try refreshing.</div>`;
     if (btn) btn.classList.remove('busy');
     return;
   }
 
   const {stage, flow, obsT, SS} = parseUSGS(usgsJson);
   let stages = {...S}, forecasts = [], noaaOk = false;
-  if (noaaXml) {
-    try { ({stages, forecasts} = parseNOAA(noaaXml)); noaaOk = true; } catch(e) {}
+  if (noaaJson) {
+    try { ({stages, forecasts} = parseNOAA(noaaJson)); noaaOk = forecasts.length > 0; } catch(e) {}
   }
 
   const st = statusFor(stage, stages);
@@ -263,14 +261,15 @@ async function loadAll() {
   const pk7 = SS.length ? Math.max(...SS.map(d=>d.v)).toFixed(2) : null;
 
   const rows = [
-    {label:'MAJOR FLOOD',   val:stages.major,    color:'#e74c3c'},
-    {label:'MODERATE FLOOD',val:stages.moderate, color:'#e67e22'},
-    {label:'MINOR FLOOD',   val:stages.minor,    color:'#f39c12'},
-    {label:'ACTION STAGE',  val:stages.action,   color:'#f5a623'},
+    {label:'MAJOR FLOOD',   val:stages.major,    color:'#dc2626'},
+    {label:'MODERATE FLOOD',val:stages.moderate, color:'#ea580c'},
+    {label:'MINOR FLOOD',   val:stages.minor,    color:'#d97706'},
+    {label:'ACTION STAGE',  val:stages.action,   color:'#ca8a04'},
   ];
 
   const html = `
-    ${!noaaOk?`<div class="note">Forecast unavailable &mdash; using hardcoded flood thresholds.</div>`:''}
+    ${!noaaOk?`<div class="note">NOAA forecast unavailable &mdash; using NWS hardcoded flood thresholds.</div>`:''}
+
     <div class="card" style="animation-delay:0s">
       <div class="ct">River Status</div>
       <div class="srow">
@@ -281,7 +280,14 @@ async function loadAll() {
         </div>
       </div>
     </div>
-    <div class="card" style="animation-delay:.05s">
+
+    ${chart48.length>3?`
+    <div class="card" style="animation-delay:.04s">
+      <div class="ct">Last 48 Hours (USGS)</div>
+      <canvas id="gc" height="190"></canvas>
+    </div>`:''}
+
+    <div class="card" style="animation-delay:.08s">
       <div class="ct">Current Stage &amp; Flow</div>
       <div class="rc">
         <div class="bign">${stage!==null?stage.toFixed(2):'&mdash;'}</div>
@@ -290,7 +296,8 @@ async function loadAll() {
         <div class="bigt">${fmt(obsT)}</div>
       </div>
     </div>
-    <div class="card" style="animation-delay:.1s">
+
+    <div class="card" style="animation-delay:.12s">
       <div class="ct">Flood Stage Levels</div>
       <div class="barw"><div class="barf" id="bf" style="width:0%"></div></div>
       ${rows.map(r=>`
@@ -304,6 +311,7 @@ async function loadAll() {
           <span class="sv" style="color:var(--accent)">${stage.toFixed(2)} ft</span>
         </div>`:''}
     </div>
+
     <div class="g2">
       <div class="ic"><div class="icl">To Action</div>
         <div class="icv" style="color:${toAct!==null&&parseFloat(toAct)<=0?'var(--warn)':'var(--text)'}">
@@ -321,14 +329,11 @@ async function loadAll() {
         <div class="icv">${pk7??'&mdash;'}</div>
         <div class="icu">feet</div></div>
     </div>
-    ${chart48.length>3?`
-    <div class="card" style="animation-delay:.18s">
-      <div class="ct">Last 48 Hours (USGS)</div>
-      <canvas id="gc" height="190"></canvas>
-    </div>`:''}
+
     ${forecasts.length?renderForecastHtml(forecasts):''}
+
     <div class="card" style="animation-delay:.28s">
-      <div class="ct">NOAA Hydrograph Image</div>
+      <div class="ct">NOAA Hydrograph</div>
       <div class="noaa-img-wrap">
         <img class="noaa-img" src="${NOAA_IMG}?t=${Date.now()}" alt="NOAA hydrograph"
           onerror="this.parentNode.innerHTML='<div style=padding:16px;text-align:center;color:var(--muted);font-size:11px;font-family:var(--mono)>Image unavailable</div>'">
@@ -355,39 +360,39 @@ function drawChart(data, stages) {
   const cW=W-pad.left-pad.right, cH=H-pad.top-pad.bottom;
   const xp=i=>pad.left+(i/(vals.length-1))*cW;
   const yp=v=>pad.top+(1-(v-minV)/(maxV-minV))*cH;
-  ctx.fillStyle='#0f2040'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#f8fafc'; ctx.fillRect(0,0,W,H);
   for(let i=0;i<=4;i++){
     const y=pad.top+(i/4)*cH;
-    ctx.strokeStyle='rgba(100,160,255,.07)'; ctx.lineWidth=1;
+    ctx.strokeStyle='rgba(30,80,160,.08)'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y); ctx.stroke();
-    ctx.fillStyle='rgba(106,138,170,.75)'; ctx.font='9px "DM Mono",monospace'; ctx.textAlign='right';
+    ctx.fillStyle='#94a3b8'; ctx.font='9px "DM Mono",monospace'; ctx.textAlign='right';
     ctx.fillText((maxV-(i/4)*(maxV-minV)).toFixed(1),pad.left-5,y+3.5);
   }
-  [{v:stages.major,c:'#e74c3c',l:'MAJOR'},{v:stages.moderate,c:'#e67e22',l:'MOD'},
-   {v:stages.minor,c:'#f39c12',l:'MINOR'},{v:stages.action,c:'#f5a623',l:'ACTION'}].forEach(s=>{
+  [{v:stages.major,c:'#dc2626',l:'MAJOR'},{v:stages.moderate,c:'#ea580c',l:'MOD'},
+   {v:stages.minor,c:'#d97706',l:'MINOR'},{v:stages.action,c:'#ca8a04',l:'ACTION'}].forEach(s=>{
     if(s.v<minV||s.v>maxV)return;
     const y=yp(s.v);
-    ctx.setLineDash([4,4]); ctx.strokeStyle=s.c+'88'; ctx.lineWidth=1;
+    ctx.setLineDash([4,4]); ctx.strokeStyle=s.c+'99'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y); ctx.stroke();
-    ctx.setLineDash([]); ctx.fillStyle=s.c+'cc'; ctx.font='8px "DM Mono",monospace'; ctx.textAlign='right';
+    ctx.setLineDash([]); ctx.fillStyle=s.c; ctx.font='8px "DM Mono",monospace'; ctx.textAlign='right';
     ctx.fillText(s.l,W-pad.right-2,y-3);
   });
   const g=ctx.createLinearGradient(0,pad.top,0,pad.top+cH);
-  g.addColorStop(0,'rgba(77,166,255,.32)'); g.addColorStop(1,'rgba(77,166,255,.02)');
+  g.addColorStop(0,'rgba(26,86,196,.18)'); g.addColorStop(1,'rgba(26,86,196,.02)');
   ctx.beginPath(); ctx.moveTo(xp(0),yp(vals[0]));
   for(let i=1;i<vals.length;i++){const x0=xp(i-1),y0=yp(vals[i-1]),x1=xp(i),y1=yp(vals[i]);ctx.bezierCurveTo((x0+x1)/2,y0,(x0+x1)/2,y1,x1,y1);}
   ctx.lineTo(xp(vals.length-1),pad.top+cH); ctx.lineTo(xp(0),pad.top+cH); ctx.closePath();
   ctx.fillStyle=g; ctx.fill();
   ctx.beginPath(); ctx.moveTo(xp(0),yp(vals[0]));
   for(let i=1;i<vals.length;i++){const x0=xp(i-1),y0=yp(vals[i-1]),x1=xp(i),y1=yp(vals[i]);ctx.bezierCurveTo((x0+x1)/2,y0,(x0+x1)/2,y1,x1,y1);}
-  ctx.strokeStyle='#4da6ff'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+  ctx.strokeStyle='#1a56c4'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
   const lx=xp(vals.length-1),ly=yp(vals[vals.length-1]);
   ctx.beginPath(); ctx.arc(lx,ly,5,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
-  ctx.strokeStyle='#4da6ff'; ctx.lineWidth=2; ctx.stroke();
+  ctx.strokeStyle='#1a56c4'; ctx.lineWidth=2; ctx.stroke();
   [0,Math.floor(vals.length/2),vals.length-1].forEach(i=>{
     if(!times[i])return;
     const label=times[i].toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric'});
-    ctx.fillStyle='rgba(106,138,170,.75)'; ctx.font='9px "DM Mono",monospace';
+    ctx.fillStyle='#94a3b8'; ctx.font='9px "DM Mono",monospace';
     ctx.textAlign=i===0?'left':i===vals.length-1?'right':'center';
     ctx.fillText(label,xp(i),H-8);
   });
