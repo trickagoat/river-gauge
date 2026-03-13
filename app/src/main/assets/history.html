@@ -139,25 +139,45 @@ function monthLabel(ym) {
 }
 
 async function load() {
+  const wrap = document.getElementById('wrap');
+  
   const now = new Date();
   const end = now.toISOString().slice(0,10);
   const startDate = new Date(now);
   startDate.setMonth(startDate.getMonth() - 60);
   const start = startDate.toISOString().slice(0,10);
 
-  const json = await fetchUSGS(start, end);
+  const url = `https://waterservices.usgs.gov/nwis/dv/?format=json&sites=04097500&parameterCd=00065&statCd=00003&startDT=${start}&endDT=${end}`;
+  
+  wrap.innerHTML = `<div class="note">Trying direct fetch...<br>${start} to ${end}</div>`;
+  
+  let json = await tryFetch(url);
+  if (json) {
+    wrap.innerHTML += `<div class="note" style="color:green">✓ Direct fetch succeeded</div>`;
+  } else {
+    wrap.innerHTML += `<div class="note">✗ Direct failed, trying proxies...</div>`;
+    for (let i = 0; i < PROXIES.length; i++) {
+      wrap.innerHTML += `<div class="note">Trying proxy ${i+1}...</div>`;
+      json = await tryFetch(PROXIES[i](url));
+      if (json) {
+        wrap.innerHTML += `<div class="note" style="color:green">✓ Proxy ${i+1} succeeded</div>`;
+        break;
+      } else {
+        wrap.innerHTML += `<div class="note">✗ Proxy ${i+1} failed</div>`;
+      }
+    }
+  }
 
   if (!json) {
-    document.getElementById('wrap').innerHTML =
-      `<div class="err">Could not load USGS data.<br>Check your connection and try again.</div>`;
+    wrap.innerHTML += `<div class="err">All fetches failed. No data available.</div>`;
     return;
   }
 
   const records = parseDaily(json);
+  wrap.innerHTML += `<div class="note">Parsed ${records.length} daily records</div>`;
 
   if (records.length === 0) {
-    document.getElementById('wrap').innerHTML =
-      `<div class="err">Data loaded but no records found.<br>USGS may be temporarily unavailable.</div>`;
+    wrap.innerHTML += `<div class="err">No records found in response.</div>`;
     return;
   }
 
