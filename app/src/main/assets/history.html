@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#f0f4f8">
+<title>Action Stage History · St. Joseph River</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f0f4f8; --surface:#e2e8f0; --card:#ffffff;
+    --border:rgba(30,80,160,0.13); --accent:#1a56c4; --accent2:#2563eb;
+    --warn:#d97706; --ok:#16a34a; --major:#dc2626;
+    --text:#1e293b; --muted:#64748b;
+    --mono:'DM Mono',monospace; --serif:'Playfair Display',serif; --sans:'DM Sans',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+
+  header{padding:16px;border-bottom:1px solid var(--border);
+    background:rgba(240,244,248,.95);backdrop-filter:blur(12px);
+    position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center}
+  .hl .lbl{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase}
+  .hl h1{font-family:var(--serif);font-size:20px;line-height:1.2;color:var(--text)}
+  .hl .sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:1px}
+  .back{background:var(--accent);border:none;color:#fff;border-radius:8px;
+    padding:8px 13px;font-family:var(--mono);font-size:11px;cursor:pointer;
+    letter-spacing:1px;text-decoration:none;display:inline-block}
+
+  .wrap{padding:13px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:17px;margin-bottom:11px;box-shadow:0 1px 4px rgba(30,80,160,.07)}
+  .ct{font-family:var(--mono);font-size:9px;letter-spacing:2.5px;color:var(--muted);
+    text-transform:uppercase;margin-bottom:13px}
+
+  .ld{text-align:center;padding:70px 20px;font-family:var(--mono);font-size:12px;
+    color:var(--muted);letter-spacing:1px}
+  .wv{display:inline-flex;gap:4px;margin-bottom:18px}
+  .wv span{display:block;width:4px;height:22px;background:var(--accent);border-radius:2px;
+    animation:wvk 1.2s ease-in-out infinite}
+  .wv span:nth-child(2){animation-delay:.12s}.wv span:nth-child(3){animation-delay:.24s}
+  .wv span:nth-child(4){animation-delay:.36s}.wv span:nth-child(5){animation-delay:.48s}
+  @keyframes wvk{0%,100%{transform:scaleY(.35);opacity:.35}50%{transform:scaleY(1.2);opacity:1}}
+
+  /* Chart */
+  .chart-wrap{position:relative;width:100%;overflow:hidden}
+  canvas{display:block;border-radius:4px}
+
+  /* Month table */
+  .mtable{width:100%;border-collapse:collapse}
+  .mtable th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);
+    text-transform:uppercase;padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)}
+  .mtable td{font-family:var(--mono);font-size:12px;padding:7px 8px;
+    border-bottom:1px solid rgba(30,80,160,.06)}
+  .mtable tr:last-child td{border-bottom:none}
+  .bar-cell{width:45%}
+  .mini-bar{height:10px;border-radius:3px;background:var(--accent);opacity:.85;min-width:2px}
+  .days-0{color:var(--muted)}
+  .days-hi{color:var(--major);font-weight:500}
+
+  .note{background:rgba(30,86,196,.06);border:1px solid rgba(30,86,196,.15);
+    border-radius:10px;padding:11px 13px;font-family:var(--mono);font-size:10px;
+    color:var(--muted);line-height:1.8;margin-bottom:11px;text-align:center}
+  .err{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:12px;
+    padding:18px;color:#dc2626;font-family:var(--mono);font-size:12px;text-align:center;line-height:1.9}
+
+  footer{text-align:center;padding:14px 14px 30px;font-size:11px;
+    color:var(--muted);font-family:var(--mono);line-height:2}
+  footer a{color:var(--accent);text-decoration:none}
+  @keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hl">
+    <div class="lbl">USGS 04097500</div>
+    <h1>Action Stage History</h1>
+    <div class="sub">Days at or above 6.0 ft per month</div>
+  </div>
+  <a class="back" href="gauge.html">&#8592; Live</a>
+</header>
+
+<div class="wrap" id="wrap">
+  <div class="ld"><div class="wv"><span></span><span></span><span></span><span></span><span></span></div><div>LOADING 60 MONTHS&hellip;</div></div>
+</div>
+
+<footer>
+  <a href="https://waterdata.usgs.gov/monitoring-location/04097500/" target="_blank">USGS 04097500</a><br>
+  St. Joseph River at Three Rivers, MI/IN<br>
+  Stage data via USGS Water Services
+</footer>
+
+<script>
+const ACTION_STAGE = 6.0;
+// USGS daily values — parameter 00065 (stage), stat 00001 (daily max), past ~5 years
+// We'll fetch in two chunks to cover 60 months without hitting URL length limits
+
+async function fetchUSGS(startDT, endDT) {
+  const url = `https://waterservices.usgs.gov/nwis/dv/?format=json&sites=04097500&parameterCd=00065&statCd=00003&startDT=${startDT}&endDT=${endDT}`;
+  try {
+    const r = await fetch(url, {cache:'no-store'});
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  } catch(e) { return null; }
+}
+
+function parseDaily(json) {
+  const ts = json?.value?.timeSeries?.[0];
+  const vals = ts?.values?.[0]?.value || [];
+  return vals
+    .filter(v => v.value !== '-999999' && !isNaN(parseFloat(v.value)))
+    .map(v => ({ date: v.dateTime.slice(0,10), stage: parseFloat(v.value) }));
+}
+
+function toYM(dateStr) {
+  return dateStr.slice(0,7); // "YYYY-MM"
+}
+
+function monthLabel(ym) {
+  const [y, m] = ym.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[parseInt(m)-1]} ${y}`;
+}
+
+async function load() {
+  // Calculate date range: 60 months back from today
+  const now = new Date();
+  const end = now.toISOString().slice(0,10);
+  const startDate = new Date(now);
+  startDate.setMonth(startDate.getMonth() - 60);
+  const start = startDate.toISOString().slice(0,10);
+
+  // Fetch in two 30-month chunks to be safe
+  const mid = new Date(now);
+  mid.setMonth(mid.getMonth() - 30);
+  const midStr = mid.toISOString().slice(0,10);
+
+  const [j1, j2] = await Promise.all([
+    fetchUSGS(start, midStr),
+    fetchUSGS(midStr, end),
+  ]);
+
+  if (!j1 && !j2) {
+    document.getElementById('wrap').innerHTML =
+      `<div class="err">Could not load USGS data. Check your connection.</div>`;
+    return;
+  }
+
+  const records = [
+    ...(j1 ? parseDaily(j1) : []),
+    ...(j2 ? parseDaily(j2) : []),
+  ];
+
+  // Deduplicate by date
+  const seen = new Set();
+  const deduped = records.filter(r => {
+    if (seen.has(r.date)) return false;
+    seen.add(r.date); return true;
+  });
+
+  // Group by month, count days at/above action stage
+  const monthMap = {};
+  for (const r of deduped) {
+    const ym = toYM(r.date);
+    if (!monthMap[ym]) monthMap[ym] = { total: 0, action: 0 };
+    monthMap[ym].total++;
+    if (r.stage >= ACTION_STAGE) monthMap[ym].action++;
+  }
+
+  // Build sorted list of last 60 months
+  const allMonths = [];
+  for (let i = 59; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    allMonths.push(ym);
+  }
+
+  const maxDays = Math.max(...allMonths.map(ym => monthMap[ym]?.action || 0), 1);
+  const totalActionDays = allMonths.reduce((s, ym) => s + (monthMap[ym]?.action || 0), 0);
+
+  render(allMonths, monthMap, maxDays, totalActionDays);
+}
