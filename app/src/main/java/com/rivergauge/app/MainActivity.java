@@ -7,23 +7,33 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
-
     private WebView webView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         webView = new WebView(this);
         setContentView(webView);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
-        settings.setAllowUniversalAccessFromFileURLs(true);
         settings.setDomStorageEnabled(true);
-        settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
+        settings.setAllowFileAccess(true);
+        settings.setAllowFileAccessFromFileURLs(true);
+        settings.setAllowUniversalAccessFromFileURLs(true);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                // Let all navigation happen inside the WebView
+                view.loadUrl(url);
+                return true;
+            }
+        });
+
         webView.loadUrl("file:///android_asset/gauge.html");
     }
 
@@ -34,11 +44,5 @@ public class MainActivity extends Activity {
         } else {
             super.onBackPressed();
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        webView.evaluateJavascript("if(typeof loadAll==='function')loadAll();", null);
     }
 }
