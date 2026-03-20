@@ -4,9 +4,13 @@
 <div id="out">starting...</div>
 <script>
 document.getElementById('out').textContent = 'JS works';
-fetch('https://waterservices.usgs.gov/nwis/dv/?format=json&sites=04097500&parameterCd=00065&statCd=00003&startDT=2025-01-01&endDT=2025-03-01')
+fetch('https://waterservices.usgs.gov/nwis/dv/?format=json&sites=04097500&parameterCd=00065&startDT=2025-01-01&endDT=2025-03-01')
   .then(r => r.json())
-  .then(d => { document.getElementById('out').textContent = 'Records: ' + (d?.value?.timeSeries?.[0]?.values?.[0]?.value?.length || 0); })
+  .then(d => {
+    const ts = d?.value?.timeSeries || [];
+    const info = ts.map(t => t.variable?.variableCode?.[0]?.value + ' stat:' + t.statisticCode?.value + ' n:' + (t.values?.[0]?.value?.length||0)).join(' | ');
+    document.getElementById('out').textContent = 'Series: ' + (ts.length) + ' -- ' + info;
+  })
   .catch(e => { document.getElementById('out').textContent = 'Fetch error: ' + e; });
 </script>
 </body>
