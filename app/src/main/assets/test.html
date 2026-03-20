@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <body>
-<div id="out">starting...</div>
+<div id="out">trying...</div>
 <script>
-document.getElementById('out').textContent = 'trying...';
-fetch('https://waterservices.usgs.gov/nwis/dv/?format=json&sites=04097500&parameterCd=00065&startDT=2025-01-01&endDT=2025-03-01&siteStatus=all')
+fetch('https://waterservices.usgs.gov/nwis/iv/?format=json&sites=04097500&parameterCd=00065&startDT=2024-01-01&endDT=2024-12-31')
   .then(r => r.json())
   .then(d => {
     const ts = d?.value?.timeSeries || [];
-    document.getElementById('out').textContent = 'dv series: ' + ts.length + ' records: ' + (ts[0]?.values?.[0]?.value?.length||0);
+    const n = ts[0]?.values?.[0]?.value?.length || 0;
+    document.getElementById('out').textContent = 'iv series: ' + ts.length + ' records: ' + n;
   })
   .catch(e => { document.getElementById('out').textContent = 'error: ' + e; });
 </script>
