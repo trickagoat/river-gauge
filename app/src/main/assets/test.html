@@ -3,14 +3,15 @@
 <body>
 <div id="out">trying...</div>
 <script>
-fetch('https://waterservices.usgs.gov/nwis/iv/?format=json&sites=04097500&parameterCd=00065&startDT=2024-01-01&endDT=2024-12-31')
-  .then(r => r.json())
-  .then(d => {
-    const ts = d?.value?.timeSeries || [];
-    const n = ts[0]?.values?.[0]?.value?.length || 0;
-    document.getElementById('out').textContent = 'iv series: ' + ts.length + ' records: ' + n;
-  })
-  .catch(e => { document.getElementById('out').textContent = 'error: ' + e; });
+const years = ['2021','2022','2023','2024','2025'];
+Promise.all(years.map(y =>
+  fetch(`https://waterservices.usgs.gov/nwis/iv/?format=json&sites=04097500&parameterCd=00065&startDT=${y}-01-01&endDT=${y}-12-31`)
+    .then(r => r.json())
+    .then(d => y + ':' + (d?.value?.timeSeries?.[0]?.values?.[0]?.value?.length||0))
+    .catch(e => y + ':error')
+)).then(results => {
+  document.getElementById('out').textContent = results.join(' | ');
+});
 </script>
 </body>
 </html>
