@@ -92,44 +92,28 @@
 </footer>
 
 <script>
-window.onerror = function(msg,src,line) { document.getElementById('wrap').innerHTML = '<div class="err">JS ERROR line '+line+': '+msg+'</div>'; };
-  
 const ACTION_STAGE = 6.0;
 
-const PROXIES = [
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  url => `https://cors-anywhere.herokuapp.com/${url}`,
-];
-
-async function tryFetch(url) {
+async function fetchYear(year) {
+  const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=04097500&parameterCd=00065&startDT=${year}-01-01&endDT=${year}-12-31`;
   try {
-    const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 8000);
-    const r = await fetch(url, {cache:'no-store', signal: controller.signal});
-    clearTimeout(tid);
+    const r = await fetch(url, {cache:'no-store'});
     if (!r.ok) throw new Error(r.status);
     return r.json();
   } catch(e) { return null; }
 }
 
-async function fetchUSGS(startDT, endDT) {
-  const url = `https://waterservices.usgs.gov/nwis/dv/?format=json&sites=04097500&parameterCd=00065&statCd=00003&startDT=${startDT}&endDT=${endDT}`;
-  const direct = await tryFetch(url);
-  if (direct) return direct;
-  for (const proxy of PROXIES) {
-    const result = await tryFetch(proxy(url));
-    if (result) return result;
+function parseIV(json) {
+  const vals = json?.value?.timeSeries?.[0]?.values?.[0]?.value || [];
+  // Return max stage per day
+  const dayMax = {};
+  for (const v of vals) {
+    if (v.value === '-999999' || isNaN(parseFloat(v.value))) continue;
+    const date = v.dateTime.slice(0,10);
+    const stage = parseFloat(v.value);
+    if (dayMax[date] === undefined || stage > dayMax[date]) dayMax[date] = stage;
   }
-  return null;
-}
-
-function parseDaily(json) {
-  const ts = json?.value?.timeSeries?.[0];
-  const vals = ts?.values?.[0]?.value || [];
-  return vals
-    .filter(v => v.value !== '-999999' && !isNaN(parseFloat(v.value)))
-    .map(v => ({ date: v.dateTime.slice(0,10), stage: parseFloat(v.value) }));
+  return dayMax; // { 'YYYY-MM-DD': maxStage }
 }
 
 function toYM(dateStr) { return dateStr.slice(0,7); }
@@ -142,55 +126,40 @@ function monthLabel(ym) {
 
 async function load() {
   const wrap = document.getElementById('wrap');
-  
   const now = new Date();
-  const end = now.toISOString().slice(0,10);
-  const startDate = new Date(now);
-  startDate.setMonth(startDate.getMonth() - 60);
-  const start = startDate.toISOString().slice(0,10);
+  const currentYear = now.getFullYear();
+  const years = [];
+  for (let y = currentYear - 4; y <= currentYear; y++) years.push(y);
 
-  const url = `https://waterservices.usgs.gov/nwis/dv/?format=json&sites=04097500&parameterCd=00065&statCd=00003&startDT=${start}&endDT=${end}`;
-  
-  wrap.innerHTML = `<div class="note">Trying direct fetch...<br>${start} to ${end}</div>`;
-  
-  let json = await tryFetch(url);
-  if (json) {
-    wrap.innerHTML += `<div class="note" style="color:green">✓ Direct fetch succeeded</div>`;
-  } else {
-    wrap.innerHTML += `<div class="note">✗ Direct failed, trying proxies...</div>`;
-    for (let i = 0; i < PROXIES.length; i++) {
-      wrap.innerHTML += `<div class="note">Trying proxy ${i+1}...</div>`;
-      json = await tryFetch(PROXIES[i](url));
-      if (json) {
-        wrap.innerHTML += `<div class="note" style="color:green">✓ Proxy ${i+1} succeeded</div>`;
-        break;
-      } else {
-        wrap.innerHTML += `<div class="note">✗ Proxy ${i+1} failed</div>`;
-      }
-    }
+  wrap.innerHTML = `<div class="note">Loading ${years[0]}–${years[years.length-1]}...</div>`;
+
+  // Fetch all years in parallel
+  const results = await Promise.all(years.map(y => fetchYear(y)));
+
+  // Merge all dayMax records
+  const allDayMax = {};
+  for (const json of results) {
+    if (!json) continue;
+    const dayMax = parseIV(json);
+    Object.assign(allDayMax, dayMax);
   }
 
-  if (!json) {
-    wrap.innerHTML += `<div class="err">All fetches failed. No data available.</div>`;
+  const totalDays = Object.keys(allDayMax).length;
+  if (totalDays === 0) {
+    wrap.innerHTML = `<div class="err">No data returned. Check connection.</div>`;
     return;
   }
 
-  const records = parseDaily(json);
-  wrap.innerHTML += `<div class="note">Parsed ${records.length} daily records</div>`;
-
-  if (records.length === 0) {
-    wrap.innerHTML += `<div class="err">No records found in response.</div>`;
-    return;
-  }
-
+  // Build month map: count days where max stage >= action stage
   const monthMap = {};
-  for (const r of records) {
-    const ym = toYM(r.date);
+  for (const [date, maxStage] of Object.entries(allDayMax)) {
+    const ym = toYM(date);
     if (!monthMap[ym]) monthMap[ym] = { total: 0, action: 0 };
     monthMap[ym].total++;
-    if (r.stage >= ACTION_STAGE) monthMap[ym].action++;
+    if (maxStage >= ACTION_STAGE) monthMap[ym].action++;
   }
 
+  // Build list of last 60 months
   const allMonths = [];
   for (let i = 59; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -203,6 +172,8 @@ async function load() {
 
   render(allMonths, monthMap, maxDays, totalActionDays);
 }
+
+load();
 </script>
 </body>
 </html>
