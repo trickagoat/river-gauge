@@ -3,15 +3,14 @@
 <body>
 <div id="out">starting...</div>
 <script>
-document.getElementById('out').textContent = 'JS works';
-fetch('https://waterservices.usgs.gov/nwis/dv/?format=json&sites=04097500&parameterCd=00065&startDT=2025-01-01&endDT=2025-03-01')
+document.getElementById('out').textContent = 'trying...';
+fetch('https://waterservices.usgs.gov/nwis/dv/?format=json&sites=04097500&parameterCd=00065&startDT=2025-01-01&endDT=2025-03-01&siteStatus=all')
   .then(r => r.json())
   .then(d => {
     const ts = d?.value?.timeSeries || [];
-    const info = ts.map(t => t.variable?.variableCode?.[0]?.value + ' stat:' + t.statisticCode?.value + ' n:' + (t.values?.[0]?.value?.length||0)).join(' | ');
-    document.getElementById('out').textContent = 'Series: ' + (ts.length) + ' -- ' + info;
+    document.getElementById('out').textContent = 'dv series: ' + ts.length + ' records: ' + (ts[0]?.values?.[0]?.value?.length||0);
   })
-  .catch(e => { document.getElementById('out').textContent = 'Fetch error: ' + e; });
+  .catch(e => { document.getElementById('out').textContent = 'error: ' + e; });
 </script>
 </body>
 </html>
