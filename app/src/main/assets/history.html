@@ -95,17 +95,24 @@
 const ACTION_STAGE = 6.0;
 
 async function fetchYear(year) {
-  const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=04097500&parameterCd=00065&startDT=${year}-01-01&endDT=${year}-12-31`;
+  const start = `${year}-01-01`;
+  const end = year === new Date().getFullYear()
+    ? new Date().toISOString().slice(0,10)
+    : `${year}-12-31`;
+  const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=04097500&parameterCd=00065&startDT=${start}&endDT=${end}`;
   try {
-    const r = await fetch(url, {cache:'no-store'});
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 30000);
+    const r = await fetch(url, {cache:'no-store', signal: controller.signal});
+    clearTimeout(tid);
     if (!r.ok) throw new Error(r.status);
     return r.json();
   } catch(e) { return null; }
 }
 
-function parseIV(json) {
+function processYear(json) {
+  // Returns { 'YYYY-MM': actionDays } for this year only
   const vals = json?.value?.timeSeries?.[0]?.values?.[0]?.value || [];
-  // Return max stage per day
   const dayMax = {};
   for (const v of vals) {
     if (v.value === '-999999' || isNaN(parseFloat(v.value))) continue;
@@ -113,10 +120,14 @@ function parseIV(json) {
     const stage = parseFloat(v.value);
     if (dayMax[date] === undefined || stage > dayMax[date]) dayMax[date] = stage;
   }
-  return dayMax; // { 'YYYY-MM-DD': maxStage }
+  const monthMap = {};
+  for (const [date, maxStage] of Object.entries(dayMax)) {
+    const ym = date.slice(0,7);
+    if (!monthMap[ym]) monthMap[ym] = 0;
+    if (maxStage >= ACTION_STAGE) monthMap[ym]++;
+  }
+  return monthMap;
 }
-
-function toYM(dateStr) { return dateStr.slice(0,7); }
 
 function monthLabel(ym) {
   const [y, m] = ym.split('-');
@@ -131,32 +142,23 @@ async function load() {
   const years = [];
   for (let y = currentYear - 4; y <= currentYear; y++) years.push(y);
 
-  wrap.innerHTML = `<div class="note">Loading ${years[0]}–${years[years.length-1]}...</div>`;
+  // Combined month map built year by year
+  const allMonthMap = {};
 
-  // Fetch all years in parallel
-  const results = await Promise.all(years.map(y => fetchYear(y)));
-
-  // Merge all dayMax records
-  const allDayMax = {};
-  for (const json of results) {
-    if (!json) continue;
-    const dayMax = parseIV(json);
-    Object.assign(allDayMax, dayMax);
-  }
-
-  const totalDays = Object.keys(allDayMax).length;
-  if (totalDays === 0) {
-    wrap.innerHTML = `<div class="err">No data returned. Check connection.</div>`;
-    return;
-  }
-
-  // Build month map: count days where max stage >= action stage
-  const monthMap = {};
-  for (const [date, maxStage] of Object.entries(allDayMax)) {
-    const ym = toYM(date);
-    if (!monthMap[ym]) monthMap[ym] = { total: 0, action: 0 };
-    monthMap[ym].total++;
-    if (maxStage >= ACTION_STAGE) monthMap[ym].action++;
+  for (const year of years) {
+    wrap.innerHTML = `<div class="note">Loading ${year} of ${currentYear}...</div>`;
+    const json = await fetchYear(year);
+    if (!json) {
+      wrap.innerHTML += `<div class="note">⚠️ ${year} unavailable, skipping</div>`;
+      await new Promise(r => setTimeout(r, 500));
+      continue;
+    }
+    const yearMap = processYear(json);
+    Object.assign(allMonthMap, yearMap);
+    const actionTotal = Object.values(yearMap).reduce((s,v) => s+v, 0);
+    wrap.innerHTML = `<div class="note">✓ Loaded ${year} (${actionTotal} action days)<br>Loading next year...</div>`;
+    // Small pause to let WebView breathe between large fetches
+    await new Promise(r => setTimeout(r, 300));
   }
 
   // Build list of last 60 months
@@ -167,13 +169,66 @@ async function load() {
     allMonths.push(ym);
   }
 
-  const maxDays = Math.max(...allMonths.map(ym => monthMap[ym]?.action || 0), 1);
-  const totalActionDays = allMonths.reduce((s, ym) => s + (monthMap[ym]?.action || 0), 0);
+  const maxDays = Math.max(...allMonths.map(ym => allMonthMap[ym] || 0), 1);
+  const totalActionDays = allMonths.reduce((s, ym) => s + (allMonthMap[ym] || 0), 0);
 
-  render(allMonths, monthMap, maxDays, totalActionDays);
+  if (totalActionDays === 0 && Object.keys(allMonthMap).length === 0) {
+    wrap.innerHTML = `<div class="err">No data could be loaded.</div>`;
+    return;
+  }
+
+  render(allMonths, allMonthMap, maxDays, totalActionDays);
 }
 
 load();
+    
+function render(allMonths, monthMap, maxDays, totalActionDays) {
+  const chartMonths = allMonths.slice(-24);
+
+  const html = `
+    <div class="note">
+      Days with max stage &ge; ${ACTION_STAGE} ft (action stage) &mdash; 60-month window &mdash;
+      ${totalActionDays} total action days
+    </div>
+
+    <div class="card" style="animation:fu .3s ease both">
+      <div class="ct">Last 24 Months &mdash; Action Days per Month</div>
+      <div class="chart-wrap">
+        <canvas id="hc" height="160"></canvas>
+      </div>
+    </div>
+
+    <div class="card" style="animation:fu .4s ease both">
+      <div class="ct">All 60 Months &mdash; Detail</div>
+      <table class="mtable">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Action Days</th>
+            <th class="bar-cell"></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${[...allMonths].reverse().map(ym => {
+            const days = monthMap[ym] || 0;
+            const pct = Math.round((days / maxDays) * 100);
+            const cls = days === 0 ? 'days-0' : days >= 10 ? 'days-hi' : '';
+            return `<tr>
+              <td>${monthLabel(ym)}</td>
+              <td class="${cls}">${days === 0 ? '&mdash;' : days}</td>
+              <td class="bar-cell">
+                ${days > 0 ? `<div class="mini-bar" style="width:${pct}%;background:${days>=10?'var(--major)':days>=5?'var(--warn)':'var(--accent)'}"></div>` : ''}
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById('wrap').innerHTML = html;
+  drawChart(chartMonths, monthMap, maxDays);
+}
 </script>
 </body>
 </html>
