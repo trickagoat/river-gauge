@@ -146,6 +146,13 @@ const USGS_URL = 'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=0409
 const NOAA_API = 'https://api.water.noaa.gov/nwps/v1/gauges/trvm4/stageflow';
 const NOAA_IMG = 'https://water.noaa.gov/images/hydrographs/trvm4_hg.png';
 
+function toFtIn(ft) {
+  if (ft === null || isNaN(ft)) return '&mdash;';
+  const totalIn = Math.round(ft * 12);
+  const f = Math.floor(totalIn / 12);
+  const i = totalIn % 12;
+  return `${f}' ${i}"`;
+}
 async function tryFetch(url, isJson) {
   try {
     const r = await fetch(url, {cache:'no-store'});
@@ -291,8 +298,8 @@ async function loadAll() {
     <div class="card" style="animation-delay:.08s">
       <div class="ct">Current Stage &amp; Flow</div>
       <div class="rc">
-        <div class="bign">${stage!==null?stage.toFixed(2):'&mdash;'}</div>
-        <div class="bigu">feet</div>
+        <div class="bign" style="font-size:44px">${toFtIn(stage)}</div>
+        <div class="bigu">feet &amp; inches</div>
         ${flow!==null?`<div class="bigf">${Math.round(flow).toLocaleString()} <span style="font-size:13px;color:var(--muted)">cfs</span></div>`:''}
         <div class="bigt">${fmt(obsT)}</div>
       </div>
@@ -304,31 +311,31 @@ async function loadAll() {
       ${rows.map(r=>`
         <div class="sr ${stage!==null&&Math.abs(stage-r.val)<0.9?'on':''}">
           <div class="sl"><div class="sd" style="background:${r.color}"></div><span class="sn">${r.label}</span></div>
-          <span class="sv" style="color:${r.color}">${r.val.toFixed(1)} ft</span>
+          <span class="sv" style="color:${r.color}">${toFtIn(r.val)}</span>
         </div>`).join('')}
       ${stage!==null?`
         <div class="sr on">
           <div class="sl"><div class="sd" style="background:var(--accent)"></div><span class="sn">CURRENT</span></div>
-          <span class="sv" style="color:var(--accent)">${stage.toFixed(2)} ft</span>
+          <span class="sv" style="color:var(--accent)">${toFtIn(stage)}</span>
         </div>`:''}
     </div>
 
     <div class="g2">
       <div class="ic"><div class="icl">To Action</div>
         <div class="icv" style="color:${toAct!==null&&parseFloat(toAct)<=0?'var(--warn)':'var(--text)'}">
-          ${toAct!==null?(parseFloat(toAct)<=0?'AT/ABOVE':'+'+toAct):'&mdash;'}</div>
-        <div class="icu">feet</div></div>
+          ${toAct!==null?(parseFloat(toAct)<=0?'AT/ABOVE':'+'+toFtIn(parseFloat(toAct))):'&mdash;'}</div>
+        <div class="icu">ft / in</div></div>
       <div class="ic"><div class="icl">To Minor Flood</div>
         <div class="icv" style="color:${toMin!==null&&parseFloat(toMin)<=0?'var(--minor)':'var(--text)'}">
-          ${toMin!==null?(parseFloat(toMin)<=0?'FLOODING':'+'+toMin):'&mdash;'}</div>
-        <div class="icu">feet</div></div>
+          ${toMin!==null?(parseFloat(toMin)<=0?'FLOODING':'+'+toFtIn(parseFloat(toMin))):'&mdash;'}</div>
+        <div class="icu">ft / in</div></div>
       <div class="ic"><div class="icl">24h Change</div>
         <div class="icv" style="color:${ch24!==null?(parseFloat(ch24)>.5?'var(--warn)':parseFloat(ch24)<-.5?'var(--accent2)':'var(--text)'):'var(--text)'}">
-          ${ch24!==null?(parseFloat(ch24)>=0?'+':'')+ch24:'&mdash;'}</div>
-        <div class="icu">feet</div></div>
+          ${ch24!==null?(parseFloat(ch24)>=0?'+':'')+toFtIn(Math.abs(parseFloat(ch24))):'&mdash;'}</div>
+        <div class="icu">ft / in</div></div>
       <div class="ic"><div class="icl">7-Day Peak</div>
-        <div class="icv">${pk7??'&mdash;'}</div>
-        <div class="icu">feet</div></div>
+        <div class="icv">${pk7!==null?toFtIn(parseFloat(pk7)):'&mdash;'}</div>
+        <div class="icu">ft / in</div></div>
     </div>
 
     ${forecasts.length?renderForecastHtml(forecasts):''}
@@ -366,7 +373,7 @@ function drawChart(data, stages) {
     const y=pad.top+(i/4)*cH;
     ctx.strokeStyle='rgba(30,80,160,.08)'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y); ctx.stroke();
-    ctx.fillStyle='#94a3b8'; ctx.font='9px "DM Mono",monospace'; ctx.textAlign='right';
+    ctx.fillStyle='#475569'; ctx.font='9px "DM Mono",monospace'; ctx.textAlign='right';
     ctx.fillText((maxV-(i/4)*(maxV-minV)).toFixed(1),pad.left-5,y+3.5);
   }
   [{v:stages.major,c:'#dc2626',l:'MAJOR'},{v:stages.moderate,c:'#ea580c',l:'MOD'},
@@ -393,7 +400,7 @@ function drawChart(data, stages) {
   [0,Math.floor(vals.length/2),vals.length-1].forEach(i=>{
     if(!times[i])return;
     const label=times[i].toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric'});
-    ctx.fillStyle='#94a3b8'; ctx.font='9px "DM Mono",monospace';
+    ctx.fillStyle='#475569'; ctx.font='9px "DM Mono",monospace';
     ctx.textAlign=i===0?'left':i===vals.length-1?'right':'center';
     ctx.fillText(label,xp(i),H-8);
   });
