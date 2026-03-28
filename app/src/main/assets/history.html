@@ -137,10 +137,8 @@ function monthLabel(ym) {
 }
 
 async function load() {
-const CACHE_KEY = 'historyCache';
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
-
-async function load() {
+  const CACHE_KEY = 'historyCache';
+  const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
   const wrap = document.getElementById('wrap');
 
   // Check cache
@@ -202,7 +200,6 @@ function buildAndRender(allMonthMap) {
     return;
   }
   render(allMonths, allMonthMap, maxDays, totalActionDays);
-}
 }
 
 load();
