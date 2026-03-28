@@ -82,7 +82,7 @@
 </header>
 
 <div class="wrap" id="wrap">
-  <div class="ld"><div class="wv"><span></span><span></span><span></span><span></span><span></span></div><div>LOADING 60 MONTHS&hellip;</div></div>
+  <div id="wrap"><div class="ld"><div class="wv"><span></span><span></span><span></span><span></span><span></span></div><div>WAITING...</div></div></div>
 </div>
 
 <footer>
@@ -92,6 +92,8 @@
 </footer>
 
 <script>
+window.onerror = function(msg,src,line,col,err) { document.getElementById('wrap').innerHTML = '<div class="err">JS ERROR line '+line+': '+msg+'</div>'; return true; };
+document.getElementById('wrap').innerHTML = '<div class="note">JS is running...</div>';
 const ACTION_STAGE = 6.0;
 
 async function fetchYear(year) {
