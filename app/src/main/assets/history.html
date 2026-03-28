@@ -79,7 +79,6 @@
     <div class="sub">Days at or above 6.0 ft per month</div>
   </div>
   <a class="back" href="gauge.html">&#8592; Live</a>
-  <button onclick="localStorage.removeItem('historyCache');location.reload()" style="background:#dc2626;border:none;color:#fff;border-radius:8px;padding:8px 13px;font-family:var(--mono);font-size:11px;cursor:pointer;margin-left:8px">Clear Cache</button>
 </header>
 
 <div class="wrap" id="wrap">
@@ -137,23 +136,7 @@ function monthLabel(ym) {
 }
 
 async function load() {
-  const CACHE_KEY = 'historyCache';
-  const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
   const wrap = document.getElementById('wrap');
-
-  // Check cache
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      const { ts, allMonthMap } = JSON.parse(cached);
-      if (Date.now() - ts < CACHE_TTL) {
-        wrap.innerHTML = `<div class="note">Using cached data from ${new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>`;
-        buildAndRender(allMonthMap);
-        return;
-      }
-    }
-  } catch(e) {}
-
   const now = new Date();
   const currentYear = now.getFullYear();
   const years = [];
@@ -175,11 +158,6 @@ async function load() {
     wrap.innerHTML = `<div class="note">✓ Loaded ${year} (${actionTotal} action days)<br>Loading next year...</div>`;
     await new Promise(r => setTimeout(r, 300));
   }
-
-  // Save to cache
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), allMonthMap }));
-  } catch(e) {}
 
   buildAndRender(allMonthMap);
 }
