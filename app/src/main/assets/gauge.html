@@ -228,7 +228,7 @@ function renderForecastHtml(forecasts) {
   const rows = forecasts.slice(0,20).map(f=>`
     <div class="fr">
       <span class="ft">${fmt(f.t)}</span>
-      <span class="fv">${f.v.toFixed(2)} ft</span>
+      <span class="fv">${toFtIn(f.v)}</span>
     </div>`).join('');
   return `<div class="card" style="animation-delay:.23s"><div class="ct">NOAA Forecast</div>${rows}</div>`;
 }
