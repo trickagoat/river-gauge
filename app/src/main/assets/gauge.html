@@ -225,7 +225,7 @@ function parseNOAA(json) {
 }
 
 function renderForecastHtml(forecasts) {
-  const rows = forecasts.slice(0,10).map(f=>`
+  const rows = forecasts.slice(0,20).map(f=>`
     <div class="fr">
       <span class="ft">${fmt(f.t)}</span>
       <span class="fv">${f.v.toFixed(2)} ft</span>
