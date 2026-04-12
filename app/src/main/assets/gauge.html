@@ -227,7 +227,7 @@ function parseNOAA(json) {
 function renderForecastHtml(forecasts) {
   const rows = forecasts.slice(0,30).map(f=>`
     <div class="fr">
-      <span class="ft">${fmt(f.t)}</span>
+      <span class="ft">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(f.t).getDay()]} ${fmt(f.t)}</span>
       <span class="fv">${toFtIn(f.v)}</span>
     </div>`).join('');
   return `<div class="card" style="animation-delay:.23s"><div class="ct">NOAA Forecast</div>${rows}</div>`;
